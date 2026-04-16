@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trading-config
+  namespace: trading-system
+data:
+  DB_DSN: "trading:trading123@tcp(mysql:3306)/trading_db?charset=utf8mb4&parseTime=True&loc=Local"
+  REDIS_ADDR: "redis:6379"
+  PORT: "8080"

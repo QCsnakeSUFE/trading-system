@@ -1,0 +1,17 @@
+# Go 相关
+*.log
+*.out
+vendor/
+bin/
+
+# 本地配置
+.env
+.env.local
+*.yaml.local
+
+# IDE 文件
+.vscode/
+.idea/
+
+# OS 文件
+.DS_Store
