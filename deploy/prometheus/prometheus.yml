@@ -9,6 +9,6 @@ scrape_configs:
 
   - job_name: 'trading-system'
     static_configs:
-      - targets: ['app:8080']
+      - targets: ['host.docker.internal:2112']
     metrics_path: '/metrics'
     scrape_interval: 5s

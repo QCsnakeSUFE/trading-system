@@ -24,8 +24,8 @@ type PriceSimulator struct {
 func NewPriceSimulator(startPrice float64) *PriceSimulator {
 	return &PriceSimulator{
 		currentPrice: startPrice,
-		mu:           0.2,
-		sigma:        50,
+		mu:           0.05,
+		sigma:        0.2,
 		dt:           1.0 / callsPerSecond / secondsPerYear,
 		r:            rand.New(rand.NewSource(time.Now().UnixNano())),
 	}

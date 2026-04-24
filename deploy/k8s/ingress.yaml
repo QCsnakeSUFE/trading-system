@@ -17,7 +17,7 @@ spec:
               service:
                 name: trading-app
                 port:
-                  number: 8080
+                  number: 2112
           - path: /prometheus
             pathType: Prefix
             backend:

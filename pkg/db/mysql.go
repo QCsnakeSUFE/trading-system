@@ -15,7 +15,7 @@ func InitDB() *gorm.DB {
 	dsn := os.Getenv("DB_DSN")
 
 	if dsn == "" {
-		dsn = "root:password123@tcp(127.0.0.1:3306)/trading_db?charset=utf8mb4&parseTime=True&loc=Local"
+		dsn = "trading:trading123@tcp(127.0.0.1:3306)/trading_db?charset=utf8mb4&parseTime=True&loc=Local&timeout=5s"
 	}
 
 	fmt.Printf("正在尝试连接数据库: %s\n", dsn)
@@ -23,17 +23,26 @@ func InitDB() *gorm.DB {
 	var db *gorm.DB
 	var err error
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 20; i++ {
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 		if err == nil {
 			break
 		}
-		log.Println("数据库还没准备好，2 秒后重试...")
-		time.Sleep(2 * time.Second)
+		log.Printf("数据库还没准备好 (%d/20)，500ms 后重试: %v\n", i+1, err)
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	if err != nil {
 		log.Fatalf("无法连接到数据库：%v", err)
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Printf("获取数据库连接失败：%v", err)
+	} else {
+		sqlDB.SetMaxIdleConns(10)
+		sqlDB.SetMaxOpenConns(100)
+		sqlDB.SetConnMaxLifetime(time.Hour)
 	}
 
 	err = db.AutoMigrate(&models.MarketQuote{}, &models.MinuteKLine{})

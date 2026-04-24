@@ -41,7 +41,7 @@ data:
 
       - job_name: 'trading-system'
         static_configs:
-          - targets: ['trading-app:8080']
+          - targets: ['trading-app:2112']
         metrics_path: '/metrics'
         scrape_interval: 5s
 ---
@@ -62,7 +62,7 @@ spec:
     spec:
       containers:
         - name: prometheus
-          image: prom/prometheus:v2.52.0
+          image: prom/prometheus:v2.45.0
           args:
             - '--config.file=/etc/prometheus/prometheus.yml'
             - '--storage.tsdb.path=/prometheus'
@@ -98,6 +98,7 @@ spec:
   ports:
     - port: 9090
       targetPort: 9090
+  type: NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -116,7 +117,7 @@ spec:
     spec:
       containers:
         - name: grafana
-          image: grafana/grafana:11.0.0
+          image: grafana/grafana:10.4.0
           env:
             - name: GF_SECURITY_ADMIN_USER
               value: admin
@@ -149,3 +150,4 @@ spec:
   ports:
     - port: 3000
       targetPort: 3000
+  type: NodePort

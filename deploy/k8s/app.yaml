@@ -9,10 +9,10 @@ spec:
   selector:
     app: trading-app
   ports:
-    - name: http
-      port: 8080
-      targetPort: 8080
-  type: ClusterIP
+    - name: metrics
+      port: 2112
+      targetPort: 2112
+  type: NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -22,7 +22,7 @@ metadata:
   labels:
     app: trading-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: trading-app
@@ -37,7 +37,7 @@ spec:
         app: trading-app
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
+        prometheus.io/port: "2112"
         prometheus.io/path: "/metrics"
     spec:
       containers:
@@ -61,8 +61,8 @@ spec:
                   name: trading-config
                   key: PORT
           ports:
-            - name: http
-              containerPort: 8080
+            - name: metrics
+              containerPort: 2112
           resources:
             requests:
               cpu: 100m
@@ -70,26 +70,30 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+          # 存活探针：检查应用是否还在运行，失败则重启
           livenessProbe:
             httpGet:
               path: /health
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+              port: 2112
+            initialDelaySeconds: 10  # 启动后等待 10s 再开始检查
+            periodSeconds: 15        # 每 15s 检查一次
+            timeoutSeconds: 3        # 3s 超时
+            failureThreshold: 3      # 连续 3 次失败才重启
+          # 就绪探针：检查应用是否可以接收流量，失败则从 Service 摘除
           readinessProbe:
             httpGet:
               path: /ready
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
+              port: 2112
+            initialDelaySeconds: 5   # 启动后等待 5s 开始检查
+            periodSeconds: 10        # 每 10s 检查一次
+            timeoutSeconds: 3        # 3s 超时
+            failureThreshold: 3      # 连续 3 次失败则未就绪
+            successThreshold: 1      # 成功 1 次即就绪
+          # 启动探针：应用启动慢时用，保证启动时间充足
           startupProbe:
             httpGet:
               path: /health
-              port: 8080
+              port: 2112
             initialDelaySeconds: 5
             periodSeconds: 5
-            failureThreshold: 30
+            failureThreshold: 30     # 给 2.5min 启动时间

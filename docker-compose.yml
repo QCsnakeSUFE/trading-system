@@ -1,7 +1,6 @@
-version: '3.8'
-
 services:
   mysql:
+    # MySQL 官方镜像没有 alpine 版本，使用官方轻量版
     image: mysql:8.0
     container_name: trading-mysql
     environment:
@@ -22,6 +21,7 @@ services:
       retries: 5
 
   redis:
+    # Redis alpine 版本，体积小
     image: redis:7-alpine
     container_name: trading-redis
     ports:
@@ -36,27 +36,11 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    build: .
-    container_name: trading-app
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      - DB_DSN=trading:trading123@tcp(mysql:3306)/trading_db?charset=utf8mb4&parseTime=True&loc=Local
-      - REDIS_ADDR=redis:6379
-      - PORT=8080
-    ports:
-      - "8080:8080"
-    networks:
-      - trading-network
-    restart: unless-stopped
-
   prometheus:
+    # Prometheus 官方 alpine 版本
     image: prom/prometheus:v2.52.0
     container_name: trading-prometheus
+    profiles: ["monitor"]
     ports:
       - "9090:9090"
     volumes:
@@ -71,8 +55,10 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
 
   grafana:
+    # Grafana OSS 版本，轻量稳定
     image: grafana/grafana:11.0.0
     container_name: trading-grafana
+    profiles: ["monitor"]
     ports:
       - "3000:3000"
     environment:

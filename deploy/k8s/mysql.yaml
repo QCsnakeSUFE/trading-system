@@ -3,19 +3,24 @@ kind: Service
 metadata:
   name: mysql
   namespace: trading-system
+  labels:
+    app: mysql
 spec:
   selector:
     app: mysql
   ports:
-    - port: 3306
+    - name: mysql
+      port: 3306
       targetPort: 3306
-  clusterIP: None
+  clusterIP: None  # 无头服务，用于 StatefulSet
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mysql
   namespace: trading-system
+  labels:
+    app: mysql
 spec:
   serviceName: mysql
   replicas: 1
@@ -46,10 +51,12 @@ spec:
                   name: trading-secret
                   key: mysql-password
           ports:
-            - containerPort: 3306
+            - name: mysql
+              containerPort: 3306
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
+          # 资源限制：保证 QoS Burstable（既有 requests < limits
           resources:
             requests:
               cpu: 100m
@@ -57,11 +64,13 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          # 存活探针：检查 MySQL 是否存活
           livenessProbe:
             exec:
               command: ["mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
             initialDelaySeconds: 30
             periodSeconds: 10
+          # 就绪探针：检查 MySQL 是否可用
           readinessProbe:
             exec:
               command: ["mysql", "-h", "localhost", "-u", "trading", "-ptrading123", "-e", "SELECT 1"]
